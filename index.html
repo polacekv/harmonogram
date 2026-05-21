@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Harmonogram projektů — PP projekt s.r.o.</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#f4f1eb;--surface:#fff;--surface2:#f9f7f3;
+  --border:#d8d2c8;--border-strong:#a89f94;
+  --text:#1a1814;--text-muted:#7a7268;
+  --accent:#1e4d7b;--accent-light:#e8f0f7;
+  --ok:#2a7a4a;--ok-light:#e8f5ed;
+  --mono:'IBM Plex Mono',monospace;--sans:'IBM Plex Sans',sans-serif;
+  --shadow:0 1px 4px rgba(0,0,0,.07);
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:100vh;font-size:14px;}
+
+/* ── HEADER ── */
+.header{background:#fff;border-bottom:2px solid var(--border);padding:0 28px;display:flex;align-items:center;gap:20px;height:56px;position:sticky;top:0;z-index:200;box-shadow:0 2px 8px rgba(0,0,0,.06);}
+.header-back{font-family:var(--mono);font-size:11px;color:var(--text-muted);text-decoration:none;display:flex;align-items:center;gap:5px;padding:5px 10px;border:1px solid var(--border);border-radius:3px;transition:all .15s;}
+.header-back:hover{border-color:var(--border-strong);color:var(--text);background:var(--surface2);}
+.header-logo{font-family:var(--mono);font-size:11px;font-weight:600;letter-spacing:2px;color:var(--text-muted);text-transform:uppercase;border-left:1px solid var(--border);padding-left:20px;}
+.header-title{font-size:15px;font-weight:600;color:var(--text);}
+.header-right{margin-left:auto;display:flex;align-items:center;gap:8px;}
+.header-last{font-family:var(--mono);font-size:9px;color:var(--text-muted);}
+
+/* ── TOOLBAR ── */
+.toolbar{background:var(--surface);border-bottom:1px solid var(--border);padding:10px 28px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+.btn{font-family:var(--mono);font-size:11px;padding:6px 14px;border-radius:3px;border:1px solid var(--border);background:var(--surface);color:var(--text-muted);cursor:pointer;transition:all .15s;letter-spacing:.3px;}
+.btn:hover{background:var(--surface2);border-color:var(--border-strong);color:var(--text);}
+.btn-active{background:var(--text);color:var(--bg);border-color:var(--text);}
+.btn-reload{background:var(--accent);color:#fff;border-color:var(--accent);}
+.btn-reload:hover{background:#17406a;}
+.sep{width:1px;height:28px;background:var(--border);margin:0 4px;}
+
+/* Rok přepínač */
+.year-group{display:flex;gap:0;}
+.year-btn{font-family:var(--mono);font-size:11px;padding:5px 12px;border:1px solid var(--border);background:transparent;color:var(--text-muted);cursor:pointer;transition:all .15s;}
+.year-btn:first-child{border-radius:3px 0 0 3px;}
+.year-btn:last-child{border-radius:0 3px 3px 0;border-left:none;}
+.year-btn.active{background:var(--text);color:var(--bg);border-color:var(--text);}
+
+/* ── LEGENDA ── */
+.legend{display:flex;gap:16px;align-items:center;flex-wrap:wrap;font-family:var(--mono);font-size:9px;color:var(--text-muted);margin-left:auto;}
+.legend-item{display:flex;align-items:center;gap:5px;}
+.legend-dot{width:11px;height:11px;border-radius:2px;flex-shrink:0;}
+.legend-diamond{width:11px;height:11px;transform:rotate(45deg);flex-shrink:0;}
+
+/* ── STATS ── */
+.stats-bar{background:var(--surface);border-bottom:1px solid var(--border);padding:12px 28px;display:flex;gap:28px;flex-wrap:wrap;}
+.stat{display:flex;flex-direction:column;gap:2px;}
+.stat-val{font-family:var(--mono);font-size:18px;font-weight:600;color:var(--text);}
+.stat-val.c1{color:var(--accent);}
+.stat-val.c2{color:var(--ok);}
+.stat-lbl{font-family:var(--mono);font-size:9px;letter-spacing:1px;text-transform:uppercase;color:var(--text-muted);}
+.stat-sep{width:1px;background:var(--border);margin:0 4px;align-self:stretch;}
+
+/* ── MAIN ── */
+main{padding:24px 28px;}
+
+/* ── GANTT ── */
+.gantt-wrap{background:var(--surface);border:1px solid var(--border);border-radius:6px;box-shadow:var(--shadow);overflow:hidden;}
+.gantt-scroll{overflow-x:auto;}
+.gantt-table{border-collapse:collapse;min-width:900px;width:100%;}
+.gantt-label-col{width:260px;min-width:260px;}
+
+.gantt-label-head{padding:0 18px;height:40px;background:var(--surface2);border-bottom:1px solid var(--border);border-right:2px solid var(--border-strong);font-family:var(--mono);font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-muted);text-align:left;vertical-align:middle;position:sticky;left:0;z-index:10;}
+.gantt-label-subhead{padding:0 18px;height:26px;background:var(--surface2);border-bottom:2px solid var(--border-strong);border-right:2px solid var(--border-strong);font-family:var(--mono);font-size:9px;color:var(--text-muted);text-align:left;vertical-align:middle;position:sticky;left:0;z-index:10;}
+.gantt-label-cell{padding:0 18px;border-bottom:1px solid var(--border);border-right:2px solid var(--border-strong);background:var(--surface);vertical-align:middle;white-space:nowrap;position:sticky;left:0;z-index:5;height:40px;}
+.gantt-proj-row td.gantt-label-cell{background:#f5f3ef;height:52px;padding:6px 18px;}
+.gantt-proj-code{font-family:var(--mono);font-size:10px;font-weight:600;display:block;}
+.gantt-proj-name{font-size:12px;font-weight:600;display:block;}
+.gantt-proj-dur{font-family:var(--mono);font-size:9px;display:block;opacity:.5;}
+.gantt-phase-label{font-family:var(--mono);font-size:11px;color:var(--text-muted);padding-left:5px;}
+.gantt-phase-num{font-family:var(--mono);font-size:10px;padding:2px 7px;border-radius:2px;color:#fff;opacity:.85;display:inline-block;}
+
+.gantt-month-head{text-align:center;background:var(--surface2);border-bottom:1px solid var(--border);border-right:1px solid var(--border);font-family:var(--mono);font-size:10px;font-weight:600;color:var(--text);height:40px;vertical-align:middle;white-space:nowrap;letter-spacing:.5px;}
+.gantt-month-head.today-month{background:#eaf2fa;color:var(--accent);}
+.gantt-month-head.past-month{opacity:.35;}
+.gantt-month-head.year-sep{border-left:3px solid var(--border-strong);}
+
+.gantt-week-head{text-align:center;background:var(--surface2);border-bottom:2px solid var(--border-strong);border-right:1px solid var(--border);font-family:var(--mono);font-size:9px;color:var(--text-muted);height:26px;vertical-align:middle;min-width:44px;}
+.gantt-week-head.today-week{background:var(--accent);color:#fff;font-weight:600;}
+.gantt-week-head.past-week{opacity:.35;background:#f5f3ef;}
+.gantt-week-head.week-first{border-left:1px solid var(--border-strong);}
+.gantt-week-head.year-first{border-left:3px solid var(--border-strong);}
+
+.gantt-cell{border-bottom:1px solid var(--border);border-right:1px solid var(--border);height:40px;padding:0;position:relative;vertical-align:middle;}
+.gantt-proj-row .gantt-cell{background:#f5f3ef;height:52px;}
+.gantt-cell.today-col{background:rgba(30,77,123,.04);}
+.gantt-cell.today-col-strong{background:rgba(30,77,123,.09);}
+.gantt-cell.week-first-col{border-left:1px solid var(--border-strong);}
+.gantt-cell.year-first-col{border-left:3px solid var(--border-strong);}
+.gantt-cell.past-col{background:#f9f8f6;}
+
+.gantt-bar{position:absolute;top:8px;bottom:8px;border-radius:3px;z-index:2;display:flex;align-items:center;padding:0 6px;overflow:hidden;cursor:default;}
+.gantt-bar-label{font-family:var(--mono);font-size:9px;color:rgba(255,255,255,.95);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;pointer-events:none;}
+.gantt-bar-progress{position:absolute;top:0;left:0;bottom:0;background:rgba(255,255,255,.22);border-radius:3px 0 0 3px;pointer-events:none;}
+.gantt-proj-bar{position:absolute;top:10px;bottom:10px;border-radius:3px;opacity:.17;pointer-events:none;}
+.gantt-today-line{position:absolute;top:0;bottom:0;width:2px;background:var(--accent);opacity:.55;z-index:4;pointer-events:none;}
+
+.gantt-milestone{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%) rotate(45deg);width:13px;height:13px;background:#c49a2a;border:2px solid #fff;box-shadow:0 1px 5px rgba(0,0,0,.3);z-index:8;cursor:default;transition:transform .15s;}
+.gantt-milestone:hover{transform:translate(-50%,-50%) rotate(45deg) scale(1.4);}
+.gantt-milestone.done{background:var(--ok);}
+
+.gantt-tooltip{position:fixed;background:var(--text);color:var(--bg);font-family:var(--mono);font-size:10px;padding:7px 11px;border-radius:4px;pointer-events:none;z-index:9999;opacity:0;transition:opacity .15s;white-space:normal;max-width:280px;line-height:1.6;}
+.gantt-tooltip.visible{opacity:1;}
+.gantt-empty{padding:40px;font-family:var(--mono);font-size:12px;color:var(--text-muted);text-align:center;}
+.gantt-loading{display:flex;align-items:center;justify-content:center;gap:12px;padding:40px;font-family:var(--mono);font-size:11px;color:var(--text-muted);}
+.spinner{width:20px;height:20px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+footer{text-align:center;padding:20px;font-family:var(--mono);font-size:10px;color:var(--text-muted);border-top:1px solid var(--border);margin-top:24px;}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <a class="header-back" href="index.html">← Dashboard</a>
+  <div class="header-logo">PP projekt s.r.o.</div>
+  <div class="header-title">Harmonogram projektů</div>
+  <div class="header-right">
+    <span class="header-last" id="last-updated"></span>
+  </div>
+</div>
+
+<div class="toolbar">
+  <!-- Rok -->
+  <div class="year-group">
+    <button class="year-btn" id="btn-yr-prev" onclick="setYearMode('prev')">2025</button>
+    <button class="year-btn active" id="btn-yr-cur"  onclick="setYearMode('cur')">2026</button>
+    <button class="year-btn" id="btn-yr-next" onclick="setYearMode('next')">2027</button>
+    <button class="year-btn active" id="btn-yr-both" onclick="setYearMode('both')" style="border-left:1px solid var(--border);">2026–2027</button>
+  </div>
+  <div class="sep"></div>
+  <!-- Filtr -->
+  <button class="btn" id="btn-hide-past" onclick="togglePastMonths()">Skrýt minulé měsíce</button>
+  <div class="sep"></div>
+  <button class="btn btn-reload" onclick="reloadData()">↺ Aktualizovat data</button>
+
+  <!-- Legenda -->
+  <div class="legend">
+    <div class="legend-item"><div class="legend-dot" style="background:#1e4d7b"></div>2601 Vamberk</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#2d7a4f"></div>2603 Třebechovice</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#8a3a1e"></div>2604 Ledeč</div>
+    <div class="legend-item" style="margin-left:8px"><div class="legend-diamond" style="background:#c49a2a"></div>Milník</div>
+    <div class="legend-item"><div class="legend-diamond" style="background:#2a7a4a"></div>Splněný milník</div>
+  </div>
+</div>
+
+<div class="stats-bar">
+  <div class="stat"><div class="stat-val c1" id="s-projects">–</div><div class="stat-lbl">Projekty</div></div>
+  <div class="stat-sep"></div>
+  <div class="stat"><div class="stat-val" id="s-tasks">–</div><div class="stat-lbl">Celkem úkolů</div></div>
+  <div class="stat"><div class="stat-val c2" id="s-done">–</div><div class="stat-lbl">Dokončeno</div></div>
+  <div class="stat"><div class="stat-val" id="s-pct" style="color:var(--accent)">–</div><div class="stat-lbl">Průměrné plnění</div></div>
+  <div class="stat-sep"></div>
+  <div class="stat"><div class="stat-val" id="s-span">–</div><div class="stat-lbl">Celkový rozsah</div></div>
+</div>
+
+<main>
+  <div class="gantt-wrap">
+    <div class="gantt-scroll">
+      <div id="gantt-container">
+        <div class="gantt-loading"><div class="spinner"></div>Načítám data projektů…</div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<footer>PP projekt s.r.o. — Harmonogram projektů · Dokumentace dle vyhl. č. 131/2024 Sb. · Zákon č. 283/2021 Sb.</footer>
+<div class="gantt-tooltip" id="gantt-tooltip"></div>
+
+<script>
+// ══ KONFIGURACE ════════════════════════════════════════════════════════════════
+const API_KEY = '$2a$10$hJNaV8pH.6L7i4bd55367OMNWSbb3Sr8fSnrq7TfMd3F16AzObeKu';
+
+const PROJECTS = [
+  { id:'vamberk-340',      binId:'69ee169b36566621a8f2def4' },
+  { id:'trebechovice-381', binId:'69f79684856a682189a0b5d0' },
+  { id:'ledec-758',        binId:'6a06fff4c0954111d8290469' },
+];
+
+const GANTT_DEFS = {
+  'vamberk-340': {
+    code:'2601', color:'#1e4d7b', short:'RD Vamberk č.p. 340',
+    phases:[
+      {num:'01',title:'Příprava projektu',pi:0},
+      {num:'02',title:'Zaměření a podklady',pi:1},
+      {num:'03',title:'Projektová dokumentace SP',pi:2},
+      {num:'04',title:'Inženýring',pi:3},
+      {num:'05',title:'Povolení stavby',pi:4},
+      {num:'06',title:'Realizace stavby',pi:5},
+    ]
+  },
+  'trebechovice-381': {
+    code:'2603', color:'#2d7a4f', short:'RD Třebechovice č.p. 381',
+    phases:[
+      {num:'01',title:'Přípravná fáze',pi:0},
+      {num:'02',title:'Projektová dokumentace',pi:1},
+      {num:'03',title:'Inženýrská činnost',pi:2},
+      {num:'04',title:'Povolení stavby',pi:3},
+      {num:'05',title:'Realizace stavby',pi:4},
+    ]
+  },
+  'ledec-758': {
+    code:'2604', color:'#8a3a1e', short:'Pasport Ledeč č.p. 758',
+    phases:[
+      {num:'01',title:'Příprava projektu',pi:0},
+      {num:'02',title:'Zaměření a podklady',pi:1},
+      {num:'03',title:'Pasport stavby',pi:2},
+    ]
+  },
+};
+
+// ══ STAV ═══════════════════════════════════════════════════════════════════════
+let taskCache      = {};   // { projId: tasks[] }
+let phaseDatesCache = {};  // { projId: phaseDates{} }
+let subPhaseDatesCache = {}; // { projId: subPhaseDates{} }
+let ganttHidePast  = false;
+let yearMode       = 'both'; // 'prev' | 'cur' | 'next' | 'both'
+
+// ══ DATA LOADING ═══════════════════════════════════════════════════════════════
+async function fetchBin(binId) {
+  try {
+    const r = await fetch('https://api.jsonbin.io/v3/b/' + binId + '/latest', {
+      headers: { 'X-Master-Key': API_KEY }
+    });
+    if (!r.ok) return null;
+    const j = await r.json();
+    return j.record || null;
+  } catch { return null; }
+}
+
+async function reloadData() {
+  document.getElementById('gantt-container').innerHTML =
+    '<div class="gantt-loading"><div class="spinner"></div>Načítám data projektů…</div>';
+
+  await Promise.all(PROJECTS.map(async p => {
+    const d = await fetchBin(p.binId);
+    taskCache[p.id]           = (d && Array.isArray(d.tasks)) ? d.tasks : [];
+    phaseDatesCache[p.id]     = (d && d.phaseDates)     ? d.phaseDates     : {};
+    subPhaseDatesCache[p.id]  = (d && d.subPhaseDates)  ? d.subPhaseDates  : {};
+  }));
+
+  updateStats();
+  renderGantt();
+  document.getElementById('last-updated').textContent =
+    'Aktualizováno: ' + new Date().toLocaleTimeString('cs-CZ');
+}
+
+// ══ STATS ══════════════════════════════════════════════════════════════════════
+function updateStats() {
+  let total = 0, done = 0;
+  let allDates = [];
+
+  Object.entries(taskCache).forEach(([projId, tasks]) => {
+    total += tasks.length;
+    done  += tasks.filter(t => t.status==2||t.completed).length;
+  });
+
+  // Rozsah z GANTT_DEFS
+  Object.entries(GANTT_DEFS).forEach(([projId, gd]) => {
+    gd.phases.forEach(ph => {
+      const r = getRangeForPhase(projId, ph.pi);
+      if (r) { allDates.push(r.start.getTime(), r.end.getTime()); }
+    });
+  });
+
+  const pct = total ? Math.round(done/total*100) : 0;
+  document.getElementById('s-projects').textContent = PROJECTS.length;
+  document.getElementById('s-tasks').textContent    = total;
+  document.getElementById('s-done').textContent     = done;
+  document.getElementById('s-pct').textContent      = pct + '%';
+
+  if (allDates.length) {
+    const tS = new Date(Math.min(...allDates));
+    const tE = new Date(Math.max(...allDates));
+    const days = Math.round((tE-tS)/86400000);
+    const span = days < 60 ? Math.round(days/7)+' týdnů' : Math.round(days/30.5)+' měs.';
+    document.getElementById('s-span').textContent =
+      fmtD(tS) + ' – ' + fmtD(tE) + ' (' + span + ')';
+  } else {
+    document.getElementById('s-span').textContent = '—';
+  }
+}
+
+// ══ ROK / FILTR ════════════════════════════════════════════════════════════════
+function setYearMode(mode) {
+  yearMode = mode;
+  ['prev','cur','next','both'].forEach(m => {
+    document.getElementById('btn-yr-'+m).classList.toggle('active', m===mode);
+  });
+  renderGantt();
+}
+
+function togglePastMonths() {
+  ganttHidePast = !ganttHidePast;
+  const b = document.getElementById('btn-hide-past');
+  if (b) b.textContent = ganttHidePast ? 'Zobrazit minulé měsíce' : 'Skrýt minulé měsíce';
+  renderGantt();
+}
+
+// ══ DATUM UTILITY ═══════════════════════════════════════════════════════════════
+const CZ_MONTHS = ['Leden','Únor','Březen','Duben','Květen','Červen','Červenec','Srpen','Září','Říjen','Listopad','Prosinec'];
+
+function parseDateLocal(s) {
+  if (!s || s.length < 10) return null;
+  const p = s.split('-');
+  const d = new Date(+p[0], +p[1]-1, +p[2]);
+  return isNaN(d) ? null : d;
+}
+function fmtD(d) { return d.toLocaleDateString('cs-CZ',{day:'numeric',month:'short',year:'numeric'}); }
+function getISOWeek(d) {
+  const dt = new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate()));
+  dt.setUTCDate(dt.getUTCDate()+4-(dt.getUTCDay()||7));
+  return Math.ceil((((dt - new Date(Date.UTC(dt.getUTCFullYear(),0,1)))/86400000)+1)/7);
+}
+function buildWeeks(year) {
+  const weeks=[]; let d=new Date(year,0,1); const dow=d.getDay();
+  d.setDate(d.getDate()+(dow===0?1:dow===1?0:8-dow));
+  while(true){
+    const thu=new Date(d); thu.setDate(d.getDate()+3);
+    if(thu.getFullYear()>year) break;
+    const month=thu.getMonth(), isFirst=!weeks.length||weeks[weeks.length-1].month!==month;
+    weeks.push({date:new Date(d),month,year,week:getISOWeek(thu),isFirst});
+    d.setDate(d.getDate()+7);
+  }
+  return weeks;
+}
+function groupMonths(weeks) {
+  const m=[];
+  weeks.forEach(w=>{
+    const k=w.year+'-'+w.month;
+    if(!m.length||m[m.length-1].key!==k) m.push({key:k,month:w.month,year:w.year,weeks:[]});
+    m[m.length-1].weeks.push(w);
+  });
+  return m;
+}
+function date2wi(date, weeks) {
+  const t=date.getTime();
+  for(let i=0;i<weeks.length;i++){
+    const s=weeks[i].date.getTime();
+    if(t>=s&&t<s+604800000) return i;
+    if(i===weeks.length-1&&t>=s+604800000) return i;
+  }
+  return t<weeks[0].date.getTime() ? 0 : null;
+}
+
+// ══ RANGE HELPERS ══════════════════════════════════════════════════════════════
+function getPhaseRangeFromRecord(projId, pi) {
+  // Zkus phaseDates (Ledeč styl — klíče jsou "0","1","2")
+  const pd = phaseDatesCache[projId];
+  if (pd) {
+    const e = pd[pi] || pd[String(pi)];
+    if (e && (e.start || e.end)) {
+      const valid = s => {
+        if (!s||s.length<10) return '';
+        const y=parseInt(s.split('-')[0]);
+        return (y>=2020&&y<=2035)?s:'';
+      };
+      const s2=valid(e.start), e2=valid(e.end);
+      if (s2||e2) return {start:s2,end:e2};
+    }
+  }
+  // Zkus subPhaseDates (Vamberk styl — klíče jsou "sp-2-0" atd.)
+  // Pro daný phaseIdx vezmi min/max ze všech subPhase termínů
+  const spd = subPhaseDatesCache[projId];
+  if (spd) {
+    const relevant = Object.entries(spd).filter(([k]) => {
+      // sp-{phase}-{sub} — zkontroluj zda phase odpovídá
+      const m = k.match(/^sp-(\d+)-/);
+      return m && parseInt(m[1]) === pi;
+    });
+    if (relevant.length) {
+      const starts = relevant.map(([,v])=>v.start).filter(Boolean).sort();
+      const ends   = relevant.map(([,v])=>v.end).filter(Boolean).sort();
+      if (starts.length||ends.length) {
+        return {
+          start: starts[0]||'',
+          end:   ends[ends.length-1]||''
+        };
+      }
+    }
+  }
+  return null;
+}
+
+function calcPhaseRangeFromTasks(tasks, pi) {
+  const pt = tasks.filter(t=>t.phase===pi&&t.deadline);
+  if (!pt.length) return null;
+  const dates = pt.map(t=>t.deadline).sort();
+  const done  = pt.filter(t=>t.status==2||t.completed).length;
+  return {
+    start: parseDateLocal(dates[0]),
+    end:   parseDateLocal(dates[dates.length-1]),
+    pct:   Math.round(done/pt.length*100), total:pt.length, done
+  };
+}
+
+function getRangeForPhase(projId, pi) {
+  const r = getPhaseRangeFromRecord(projId, pi);
+  if (r && r.start && r.end) {
+    const s=parseDateLocal(r.start), e=parseDateLocal(r.end);
+    if (s&&e) {
+      const tasks=taskCache[projId]||[];
+      const pt=tasks.filter(t=>t.phase===pi);
+      const done=pt.filter(t=>t.status==2||t.completed).length;
+      const pct=pt.length?Math.round(done/pt.length*100):0;
+      return {start:s,end:e,pct,total:pt.length,done};
+    }
+  }
+  return calcPhaseRangeFromTasks(taskCache[projId]||[], pi);
+}
+
+function findMilestones(tasks, pi) {
+  return tasks.filter(t=>t.phase===pi&&t.deadline&&t.deadline.length===10);
+}
+
+// ══ TOOLTIP ════════════════════════════════════════════════════════════════════
+function showTip(e,html){const t=document.getElementById('gantt-tooltip');t.innerHTML=html;t.classList.add('visible');moveTip(e);}
+function moveTip(e){const t=document.getElementById('gantt-tooltip');t.style.left=Math.min(e.clientX+14,window.innerWidth-t.offsetWidth-16)+'px';t.style.top=Math.min(e.clientY-10,window.innerHeight-t.offsetHeight-8)+'px';}
+function hideTip(){document.getElementById('gantt-tooltip').classList.remove('visible');}
+
+// ══ MILNÍKY ════════════════════════════════════════════════════════════════════
+function drawMilestone(projId, pi, wi, task, allWeeks) {
+  const cell = document.getElementById('gc-'+projId+'-'+pi+'-'+wi);
+  if (!cell) return;
+  const d = parseDateLocal(task.deadline);
+  if (!d) return;
+  const el = document.createElement('div');
+  el.className = 'gantt-milestone' + ((task.status==2||task.completed)?' done':'');
+  el.style.left = '50%';
+  el.addEventListener('mouseenter', e => showTip(e,
+    '<b>◆ '+task.name+'</b><br>'
+    +'Termín: '+fmtD(d)+'<br>'
+    +'Stav: '+(task.status==2||task.completed?'✓ Dokončeno':task.status==1?'⏳ Probíhá':'○ Nezahájeno')
+  ));
+  el.addEventListener('mousemove', moveTip);
+  el.addEventListener('mouseleave', hideTip);
+  cell.style.position='relative';
+  cell.style.overflow='visible';
+  cell.appendChild(el);
+}
+
+// ══ RENDER GANTT ═══════════════════════════════════════════════════════════════
+function buildAllWeeks() {
+  const today = new Date();
+  const curYear = today.getFullYear();
+  let weeks = [];
+  if (yearMode==='prev')       weeks = buildWeeks(curYear-1);
+  else if (yearMode==='cur')   weeks = buildWeeks(curYear);
+  else if (yearMode==='next')  weeks = buildWeeks(curYear+1);
+  else /* both */              weeks = [...buildWeeks(curYear), ...buildWeeks(curYear+1)];
+
+  if (ganttHidePast) {
+    weeks = weeks.filter(w =>
+      w.year > curYear || (w.year===curYear && w.month >= today.getMonth())
+    );
+  }
+  return weeks;
+}
+
+function renderGantt() {
+  const container = document.getElementById('gantt-container');
+  if (!container) return;
+
+  const today   = new Date();
+  const curYear = today.getFullYear();
+  const allWeeks = buildAllWeeks();
+  if (!allWeeks.length) {
+    container.innerHTML = '<div class="gantt-empty">Žádné týdny k zobrazení.</div>';
+    return;
+  }
+
+  const months  = groupMonths(allWeeks);
+  const todayWi = date2wi(today, allWeeks);
+  const hasData = Object.keys(taskCache).length > 0;
+
+  if (!hasData) {
+    container.innerHTML = '<div class="gantt-empty">Načítám harmonogram…</div>';
+    return;
+  }
+
+  // ── Hlavička ──────────────────────────────────────────────────────────────
+  let html = '<table class="gantt-table"><thead>'
+    + '<tr><th class="gantt-label-head gantt-label-col">Projekt / Etapa</th>';
+
+  months.forEach(m => {
+    const isToday = m.month===today.getMonth() && m.year===curYear;
+    const isPast  = m.year<curYear || (m.year===curYear && m.month<today.getMonth());
+    const isNewY  = m.month===0 && m.year!==allWeeks[0].year;
+    const label   = CZ_MONTHS[m.month] + (isNewY||m.year!==curYear?' '+m.year:'');
+    let cls = 'gantt-month-head';
+    if (isToday) cls+=' today-month';
+    if (isPast)  cls+=' past-month';
+    if (isNewY)  cls+=' year-sep';
+    html += '<th class="'+cls+'" colspan="'+m.weeks.length+'">'+label+'</th>';
+  });
+  html += '</tr><tr><th class="gantt-label-subhead gantt-label-col">ISO týdny →</th>';
+
+  allWeeks.forEach((w,wi) => {
+    const isToday = wi===todayWi;
+    const isPast  = w.year<curYear||(w.year===curYear&&w.month<today.getMonth());
+    const isNewY  = w.month===0 && wi>0 && allWeeks[wi-1].year!==w.year;
+    let cls = 'gantt-week-head';
+    if (isToday) cls+=' today-week';
+    if (isPast)  cls+=' past-week';
+    if (w.isFirst) cls += isNewY ? ' year-first' : ' week-first';
+    html += '<th class="'+cls+'">W'+w.week+'</th>';
+  });
+  html += '</tr></thead><tbody>';
+
+  // ── Řádky projektů ────────────────────────────────────────────────────────
+  Object.entries(GANTT_DEFS).forEach(([projId, gd]) => {
+    // Celkový rozsah projektu
+    let allTs = [];
+    gd.phases.forEach(ph => {
+      const r = getRangeForPhase(projId, ph.pi);
+      if (r) allTs.push(r.start.getTime(), r.end.getTime());
+    });
+    const tS = allTs.length ? new Date(Math.min(...allTs)) : null;
+    const tE = allTs.length ? new Date(Math.max(...allTs)) : null;
+    const dur = tS&&tE ? (() => {
+      const d = Math.round((tE-tS)/86400000);
+      return d<14?d+' dní':d<60?Math.round(d/7)+' týdnů':Math.round(d/30.5)+' měs.';
+    })() : '';
+    const durLbl = tS&&tE ? fmtD(tS)+' – '+fmtD(tE)+(dur?' ('+dur+')':'') : '';
+
+    // Projekt header řádek
+    html += '<tr class="gantt-proj-row">'
+      + '<td class="gantt-label-cell">'
+      + '<span class="gantt-proj-code" style="color:'+gd.color+'">'+gd.code+'</span>'
+      + '<span class="gantt-proj-name">'+gd.short+'</span>'
+      + (durLbl?'<span class="gantt-proj-dur" style="color:'+gd.color+'">'+durLbl+'</span>':'')
+      + '</td>';
+    allWeeks.forEach((w,wi) => {
+      const isPast = w.year<curYear||(w.year===curYear&&w.month<today.getMonth());
+      const isNewY = w.month===0&&wi>0&&allWeeks[wi-1].year!==w.year;
+      let cls = 'gantt-cell';
+      if (w.isFirst) cls += isNewY?' year-first-col':' week-first-col';
+      if (wi===todayWi) cls+=' today-col-strong';
+      else if (isPast) cls+=' past-col';
+      html += '<td class="'+cls+'" id="gpbar-'+projId+'-'+wi+'"></td>';
+    });
+    html += '</tr>';
+
+    // Řádky fází
+    gd.phases.forEach(ph => {
+      html += '<tr><td class="gantt-label-cell" style="padding-left:22px">'
+        + '<span class="gantt-phase-num" style="background:'+gd.color+'">'+ph.num+'</span>'
+        + ' <span class="gantt-phase-label">'+ph.title+'</span>'
+        + '</td>';
+      allWeeks.forEach((w,wi) => {
+        const isPast = w.year<curYear||(w.year===curYear&&w.month<today.getMonth());
+        const isNewY = w.month===0&&wi>0&&allWeeks[wi-1].year!==w.year;
+        let cls = 'gantt-cell';
+        if (w.isFirst) cls += isNewY?' year-first-col':' week-first-col';
+        if (wi===todayWi) cls+=' today-col';
+        else if (isPast) cls+=' past-col';
+        html += '<td class="'+cls+'" id="gc-'+projId+'-'+ph.pi+'-'+wi+'"></td>';
+      });
+      html += '</tr>';
+    });
+  });
+
+  html += '</tbody></table>';
+  container.innerHTML = html;
+
+  // ── Pruhy a milníky ───────────────────────────────────────────────────────
+  Object.entries(GANTT_DEFS).forEach(([projId, gd]) => {
+    // Projekt summary bar
+    let allTs = [];
+    gd.phases.forEach(ph => {
+      const r = getRangeForPhase(projId, ph.pi);
+      if (r) allTs.push(r.start.getTime(), r.end.getTime());
+    });
+    if (allTs.length) {
+      const si = Math.max(0, date2wi(new Date(Math.min(...allTs)), allWeeks) ?? 0);
+      const ei = Math.min(allWeeks.length-1, date2wi(new Date(Math.max(...allTs)), allWeeks) ?? (allWeeks.length-1));
+      let w = 0;
+      for (let i=si;i<=ei;i++) { const c=document.getElementById('gpbar-'+projId+'-'+i); if(c) w+=c.offsetWidth||44; }
+      const fc = document.getElementById('gpbar-'+projId+'-'+si);
+      if (fc) {
+        const b = document.createElement('div');
+        b.className='gantt-proj-bar';
+        b.style.cssText='left:0;width:'+w+'px;background:'+gd.color;
+        fc.style.position='relative'; fc.style.overflow='visible';
+        fc.appendChild(b);
+      }
+    }
+
+    // Fázové pruhy + milníky
+    gd.phases.forEach(ph => {
+      const range = getRangeForPhase(projId, ph.pi);
+      if (!range) return;
+      const si = Math.max(0, date2wi(range.start, allWeeks) ?? 0);
+      const ei = Math.min(allWeeks.length-1, date2wi(range.end, allWeeks) ?? (allWeeks.length-1));
+      const fc = document.getElementById('gc-'+projId+'-'+ph.pi+'-'+si);
+      if (!fc) return;
+
+      let w = 0;
+      for (let i=si;i<=ei;i++) { const c=document.getElementById('gc-'+projId+'-'+ph.pi+'-'+i); if(c) w+=c.offsetWidth||44; }
+      if (w < 4) w = (ei-si+1)*44;
+
+      const bar = document.createElement('div');
+      bar.className = 'gantt-bar';
+      bar.style.cssText = 'left:0;width:'+w+'px;background:'+gd.color;
+      if (range.pct>0&&range.pct<100) {
+        const p=document.createElement('div'); p.className='gantt-bar-progress'; p.style.width=range.pct+'%'; bar.appendChild(p);
+      }
+      if (w>55) {
+        const l=document.createElement('div'); l.className='gantt-bar-label'; l.textContent=range.pct+'%'; bar.appendChild(l);
+      }
+      bar.addEventListener('mouseenter', e => showTip(e,
+        '<b>'+gd.code+' · '+ph.title+'</b><br>'
+        +'Od: '+fmtD(range.start)+'<br>Do: '+fmtD(range.end)+'<br>'
+        +'Splněno: '+range.done+'/'+range.total+' ('+range.pct+'%)'
+      ));
+      bar.addEventListener('mousemove', moveTip);
+      bar.addEventListener('mouseleave', hideTip);
+      fc.style.position='relative'; fc.style.overflow='visible';
+      fc.appendChild(bar);
+
+      // Milníky
+      const tasks = taskCache[projId] || [];
+      findMilestones(tasks, ph.pi).forEach(task => {
+        const mDate = parseDateLocal(task.deadline);
+        if (!mDate) return;
+        const mWi = date2wi(mDate, allWeeks);
+        if (mWi !== null) drawMilestone(projId, ph.pi, mWi, task, allWeeks);
+      });
+    });
+  });
+
+  // ── Dnešní linie ──────────────────────────────────────────────────────────
+  if (todayWi !== null) {
+    document.querySelectorAll('.today-col,.today-col-strong').forEach(cell => {
+      const line = document.createElement('div');
+      line.className = 'gantt-today-line';
+      line.style.left = '50%';
+      cell.style.position = 'relative';
+      cell.appendChild(line);
+    });
+  }
+
+  // ── Zvýrazni přechod roku ─────────────────────────────────────────────────
+  document.querySelectorAll('.year-first-col').forEach(cell => {
+    cell.style.borderLeft = '3px solid ' + getComputedStyle(document.documentElement).getPropertyValue('--border-strong').trim();
+  });
+}
+
+// ══ INIT ═══════════════════════════════════════════════════════════════════════
+// Aktualizuj rok tlačítka na skutečný rok
+(function initYearBtns() {
+  const y = new Date().getFullYear();
+  document.getElementById('btn-yr-prev').textContent = y-1;
+  document.getElementById('btn-yr-cur').textContent  = y;
+  document.getElementById('btn-yr-next').textContent = y+1;
+  document.getElementById('btn-yr-both').textContent = y+'–'+(y+1);
+})();
+
+reloadData();
+</script>
+</body>
+</html>
